@@ -4,7 +4,7 @@ import {
     StyleSheet,
     Text,
     View,
-    Button,
+    Button, 
     Image,
     TextInput,
     FlatList,
@@ -103,7 +103,7 @@ export default function App() {
                 onChangeText={setText}
                 placeholder="Enter text item"
             />
-            <Button title="Add Item" onPress={addItem} color={'#c9adce'} />
+            <Button title="Add Item" onPress={addItem} color={'pink'} />
             <FlatList
                 data={items}
                 renderItem={renderItem} // cada item da lista (items) vai ser processado
@@ -123,12 +123,12 @@ export default function App() {
                 <Button
                     title="Increment"
                     onPress={incrementCounter}
-                    color={'#c9adce'}
+                    color={'pink'}
                 />
                 <Button
                     title="Decrement"
                     onPress={decrementCounter}
-                    color={'#c9adce'}
+                    color={'pink'}
                 />
             </View>
         </View>
@@ -146,7 +146,7 @@ const styles = StyleSheet.create({
     text: {
         fontSize: 30,
         fontWeight: 'bold',
-        fontFamily: 'sans-serif',
+        fontFamily: 'cursive',
     },
     buttonContainer: {
         marginTop: 12,
@@ -169,7 +169,7 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         marginBottom: 10,
         padding: 10,
-        backgroundColor: '#c9adce',
+        backgroundColor: '#f0f0f0',
         borderRadius: 5,
     },
     itemText: {

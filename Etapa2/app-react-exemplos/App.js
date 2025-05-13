@@ -8,14 +8,15 @@ import {
     Image,
     TextInput,
     FlatList,
-} from 'react-native';
+} from 'react-native'; 
 
-import List from './src/components/List';
+import List from './components/List';
+
 export default function App() {
-    
+
     return (
         <View style={styles.container}>
-            <List/>
+            <List />
         </View>
     );
 }
@@ -31,7 +32,7 @@ const styles = StyleSheet.create({
     text: {
         fontSize: 30,
         fontWeight: 'bold',
-        fontFamily: 'sans-serif',
+        fontFamily: 'cursive',
     },
     buttonContainer: {
         marginTop: 12,
@@ -54,7 +55,7 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         marginBottom: 10,
         padding: 10,
-        backgroundColor: '#c9adce',
+        backgroundColor: '#f0f0f0',
         borderRadius: 5,
     },
     itemText: {
