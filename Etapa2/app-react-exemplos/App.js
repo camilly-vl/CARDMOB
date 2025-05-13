@@ -10,15 +10,13 @@ import {
     FlatList,
 } from 'react-native';
 import List from './components/List';
+import Inputs from './components/inputs';
 
 export default function App() {
 
     return (
         <View style={styles.container}>
-            <List/> 
-            <View style={styles.redbox} />
-            <View style={styles.bluebox} />
-            <View style={styles.blackbox} />
+            <Inputs/>
         </View>
     );
 }
@@ -28,26 +26,9 @@ const styles = StyleSheet.create({
         flexDirection: 'column',
         justifyContent: 'space-between',
         alignItems: 'center',
-        backgroundColor: 'lightpink',
-        height: 600,
-        marginTop: 150,
-    },
-    redbox: {
-        backgroundColor: 'lightcoral',
-        width: 100,
-        height: 100,
-        borderRadius: 50,
-    },
-    bluebox: {
-        backgroundColor: 'pink',
-        width: 100,
-        height: 100,
-    },
-    blackbox: {
-        backgroundColor: 'red',
-        width: 100,
-        height: 100,
+        backgroundColor: '#ffe4c4',
+        height: '100%',
+        paddingTop: 100,
+        paddingBottom: 50,
     },
 });
-
-// onPress = OnClick
