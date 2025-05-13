@@ -8,69 +8,45 @@ import {
     Image,
     TextInput,
     FlatList,
-} from 'react-native'; 
-
+} from 'react-native';
 import List from './components/List';
 
 export default function App() {
 
     return (
         <View style={styles.container}>
-            <List />
+            <List/> 
+            <View style={styles.redbox} />
+            <View style={styles.bluebox} />
+            <View style={styles.blackbox} />
         </View>
     );
 }
 
 const styles = StyleSheet.create({
     container: {
-        flex: 1,
-        backgroundColor: '#fff',
-        marginTop: 50,
-        padding: 20,
-        justifyContent: 'center',
-    },
-    text: {
-        fontSize: 30,
-        fontWeight: 'bold',
-        fontFamily: 'cursive',
-    },
-    buttonContainer: {
-        marginTop: 12,
-        flexDirection: 'row',
-        gap: 10,
-    },
-    input: {
-        height: 40,
-        borderColor: 'gray',
-        borderWidth: 1,
-        marginBottom: 10,
-        paddingHorizontal: 10,
-    },
-    list: {
-        marginTop: 20,
-    },
-    item: {
-        flexDirection: 'row',
-        alignItems: 'center',
+        flexDirection: 'column',
         justifyContent: 'space-between',
-        marginBottom: 10,
-        padding: 10,
-        backgroundColor: '#f0f0f0',
-        borderRadius: 5,
+        alignItems: 'center',
+        backgroundColor: 'lightpink',
+        height: 600,
+        marginTop: 150,
     },
-    itemText: {
-        flex: 1,
-        marginRight: 10,
+    redbox: {
+        backgroundColor: 'lightcoral',
+        width: 100,
+        height: 100,
+        borderRadius: 50,
     },
-    buttons: {
-        flexDirection: 'row',
+    bluebox: {
+        backgroundColor: 'pink',
+        width: 100,
+        height: 100,
     },
-    editInput: {
-        flex: 1,
-        marginRight: 10,
-        borderColor: 'gray',
-        borderWidth: 1,
-        paddingHorizontal: 10,
+    blackbox: {
+        backgroundColor: 'red',
+        width: 100,
+        height: 100,
     },
 });
 
