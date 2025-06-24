@@ -1,101 +1,126 @@
-import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, Button, TextInput, FlatList } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, TextInput, Button, FlatList, StyleSheet, Alert, Image } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 
-const API_URL = 'http://10.81.205.31:3000/compras'; 
+const API_URL = 'http://10.81.205.31:5000/api/catalog'; 
 
 export default function App() {
-  const [item, setItem] = useState('');
-  const [quantidade, setQuantidade] = useState('');
-  const [compras, setCompras] = useState([]);
+  const [products, setProducts] = useState([]);
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+  const [price, setPrice] = useState('');
+
   const [editId, setEditId] = useState(null);
-  const [editItem, setEditItem] = useState('');
-  const [editQuantidade, setEditQuantidade] = useState('');
+  const [editName, setEditName] = useState('');
+  const [editDescription, setEditDescription] = useState('');
+  const [editPrice, setEditPrice] = useState('');
 
   useEffect(() => {
-    carregarCompras();
+    fetchProducts();
   }, []);
 
   // GET
-  const carregarCompras = async () => {
+  const fetchProducts = async () => {
     try {
-      const response = await fetch(API_URL);
-      const data = await response.json();
-      setCompras(data);
+      const res = await fetch(API_URL);
+      const data = await res.json();
+      setProducts(data.catalog);
     } catch (err) {
-      console.error('Erro ao carregar compras:', err);
+      console.error('Erro ao buscar produtos:', err);
     }
   };
 
   // CREATE
-  const adicionarCompra = async () => {
-    if (item.trim() === '' || quantidade.trim() === '') return;
+  const createProduct = async () => {
+    if (!name || !description || !price) return;
 
-    const novaCompra = {
-      item: item.trim(),
-      quantidade: Number(quantidade)
+    const newProduct = {
+      name,
+      description,
+      price: parseFloat(price),
+      enabled: true,
+      featured: false
     };
 
     try {
       await fetch(API_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(novaCompra)
+        body: JSON.stringify(newProduct)
       });
 
-      setItem('');
-      setQuantidade('');
-      carregarCompras();
+      setName('');
+      setDescription('');
+      setPrice('');
+      fetchProducts();
     } catch (err) {
-      console.error('Erro ao adicionar compra:', err);
+      console.error('Erro ao criar produto:', err);
     }
   };
 
   // UPDATE
-  const atualizarCompra = async (id) => {
+  const updateProduct = async (id) => {
     try {
       await fetch(`${API_URL}/${id}`, {
-        method: 'PUT',
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          item: editItem,
-          quantidade: Number(editQuantidade)
+          name: editName,
+          description: editDescription,
+          price: parseFloat(editPrice)
         })
       });
 
       setEditId(null);
-      setEditItem('');
-      setEditQuantidade('');
-      carregarCompras();
+      setEditName('');
+      setEditDescription('');
+      setEditPrice('');
+      fetchProducts();
     } catch (err) {
-      console.error('Erro ao atualizar compra:', err);
+      console.error('Erro ao atualizar produto:', err);
     }
   };
 
   // DELETE
-  const excluirCompra = async (id) => {
-    try {
-      await fetch(`${API_URL}/${id}`, {
-        method: 'DELETE'
-      });
-      carregarCompras();
-    } catch (err) {
-      console.error('Erro ao excluir compra:', err);
-    }
+  const deleteProduct = (id) => {
+    Alert.alert("Confirmar exclusão", "Deseja realmente excluir?", [
+      { text: "Cancelar", style: "cancel" },
+      {
+        text: "Excluir",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            await fetch(`${API_URL}/${id}`, {
+              method: 'DELETE'
+            });
+            fetchProducts();
+          } catch (err) {
+            console.error('Erro ao excluir produto:', err);
+          }
+        }
+      }
+    ]);
   };
 
   const renderItem = ({ item }) => {
     if (item.id !== editId) {
       return (
         <View style={styles.item}>
-          <Text style={styles.itemText}>{item.item} - {item.quantidade}</Text>
+          <Text style={styles.itemTitle}>{item.name} - R$ {item.price.toFixed(2)}</Text>
+          <Text style={styles.itemDesc}>{item.description}</Text>
+          <Image
+            source={{ uri: item.image}}
+            style={styles.image}
+          />
+
           <View style={styles.buttons}>
-            <Button title="Edit" onPress={() => {
+            <Button title="Editar" onPress={() => {
               setEditId(item.id);
-              setEditItem(item.item);
-              setEditQuantidade(String(item.quantidade));
+              setEditName(item.name);
+              setEditDescription(item.description);
+              setEditPrice(String(item.price));
             }} />
-            <Button title="Delete" color="red" onPress={() => excluirCompra(item.id)} />
+            <Button title="Excluir" color="red" onPress={() => deleteProduct(item.id)} />
           </View>
         </View>
       );
@@ -103,19 +128,25 @@ export default function App() {
       return (
         <View style={styles.item}>
           <TextInput
-            style={styles.editInput}
-            value={editItem}
-            onChangeText={setEditItem}
+            style={styles.input}
+            value={editName}
+            onChangeText={setEditName}
             placeholder="Novo nome"
           />
           <TextInput
-            style={styles.editInput}
-            value={editQuantidade}
-            onChangeText={setEditQuantidade}
-            keyboardType="numeric"
-            placeholder="Nova quantidade"
+            style={styles.input}
+            value={editDescription}
+            onChangeText={setEditDescription}
+            placeholder="Nova descrição"
           />
-          <Button title="Update" onPress={() => atualizarCompra(item.id)} />
+          <TextInput
+            style={styles.input}
+            value={editPrice}
+            onChangeText={setEditPrice}
+            keyboardType="decimal-pad"
+            placeholder="Novo preço"
+          />
+          <Button title="Salvar" onPress={() => updateProduct(item.id)} />
         </View>
       );
     }
@@ -123,27 +154,33 @@ export default function App() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>🛒 Lista de Compras</Text>
+      <Text style={styles.title}>Catálogo de Produtos</Text>
 
       <TextInput
         style={styles.input}
-        value={item}
-        onChangeText={setItem}
-        placeholder="Item a comprar"
+        value={name}
+        onChangeText={setName}
+        placeholder="Nome"
       />
       <TextInput
         style={styles.input}
-        value={quantidade}
-        onChangeText={setQuantidade}
-        placeholder="Quantidade"
-        keyboardType="numeric"
+        value={description}
+        onChangeText={setDescription}
+        placeholder="Descrição"
       />
-      <Button title="Add Item" onPress={adicionarCompra} />
+      <TextInput
+        style={styles.input}
+        value={price}
+        onChangeText={setPrice}
+        keyboardType="decimal-pad"
+        placeholder="Preço"
+      />
+      <Button title="Adicionar Produto" onPress={createProduct} />
 
       <FlatList
-        data={compras}
+        data={products}
         renderItem={renderItem}
-        keyExtractor={item => item.id?.toString()}
+        keyExtractor={item => item.id.toString()}
         style={styles.list}
       />
 
@@ -155,69 +192,68 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
-    marginTop: 40,
-    backgroundColor: '#f3e6fa',
-    alignItems: 'center',
+    padding: 24,
+    paddingTop: 48,
+    backgroundColor: '#f3e8ff', // lilás claro
   },
   title: {
-    fontSize: 32,
-    marginBottom: 24,
-    color: '#7c3aed',
-    fontFamily: 'cursive',
+    fontSize: 28,
+    fontFamily: 'Poppins-Bold',
     textAlign: 'center',
+    color: '#7c3aed', // roxo vibrante
+    marginBottom: 24,
+    letterSpacing: 1,
   },
   input: {
-    borderColor: '#b794f4',
-    borderWidth: 1,
-    padding: 12,
-    marginBottom: 12,
-    width: '90%',
-    borderRadius: 8,
-    backgroundColor: '#ede9fe',
-    fontFamily: 'cursive',
-    color: '#6d28d9',
-    fontSize: 22,
-    textAlign: 'left',
+    backgroundColor: '#ede9fe', // lilás bem claro
+    borderColor: '#a78bfa', // lilás médio
+    borderWidth: 2,
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    fontSize: 16,
+    fontFamily: 'Poppins-Regular',
+    color: '#6d28d9', // roxo escuro
+    marginBottom: 14,
   },
   list: {
-    marginTop: 24,
-    width: '100%',
+    marginTop: 22,
   },
   item: {
-    backgroundColor: '#e9d5ff',
+    backgroundColor: '#c4b5fd', // lilás médio
+    borderRadius: 14,
     padding: 18,
-    marginBottom: 12,
-    borderRadius: 10,
-    alignItems: 'center',
-    gap: 8,
-    shadowColor: '#a78bfa',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
+    marginBottom: 16,
+    borderColor: '#a78bfa', // lilás médio
+    borderWidth: 2,
+    shadowColor: '#7c3aed',
+    shadowOpacity: 0.12,
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 8,
+    elevation: 3,
   },
-  itemText: {
-    fontSize: 24,
+  itemTitle: {
+    fontSize: 20,
+    fontFamily: 'Poppins-SemiBold',
+    color: '#6d28d9', // roxo escuro
+    marginBottom: 6,
+  },
+  itemDesc: {
+    fontSize: 15,
+    fontFamily: 'Poppins-Regular',
     color: '#7c3aed',
-    fontFamily: 'cursive',
-    textAlign: 'center',
+    marginBottom: 10,
+  },
+  image: {
+    width: '100%',
+    height: 140,
+    borderRadius: 10,
+    marginBottom: 10,
+    backgroundColor: '#ede9fe',
   },
   buttons: {
     flexDirection: 'row',
-    gap: 14,
-    justifyContent: 'center',
+    justifyContent: 'space-between',
+    marginTop: 8,
   },
-  editInput: {
-    borderWidth: 1,
-    borderColor: '#c4b5fd',
-    padding: 8,
-    marginBottom: 8,
-    borderRadius: 6,
-    backgroundColor: '#faf5ff',
-    fontFamily: 'cursive',
-    color: '#6d28d9',
-    fontSize: 22,
-    textAlign: 'left',
-    width: 200,
-  }
 });
