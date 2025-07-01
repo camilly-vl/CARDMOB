@@ -1,259 +1,282 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, TextInput, Button, FlatList, StyleSheet, Alert, Image } from 'react-native';
+import React, { useState, useEffect } from 'react'; // novo: useEffect
 import { StatusBar } from 'expo-status-bar';
+import { StyleSheet, Text, View, Button, Image, TextInput, FlatList, Alert } from 'react-native'; // novo: Alert
 
-const API_URL = 'http://10.81.205.31:5000/api/catalog'; 
+// Indicar o endereço do backend.
+const BASE_URL = 'http://10.81.205.31:5000'; // novo
 
 export default function App() {
-  const [products, setProducts] = useState([]);
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
-  const [price, setPrice] = useState('');
+  // Excluir tudo que tem relação com counter, pois não usar.
+  /// CRUD em memória
+  const [catalog, setCatalog] = useState([]);
+  const [newProduct, setNewProduct] = useState({});
+  const [editProducts, setProduct] = useState({});  
+  // const [text, setText] = useState('');
+  // const [editItemId, setEditItemId] = useState(null);
+  // const [editItemText, setEditItemText] = useState('');
+  // // loading ... efeito de carregando...
+  const [loading, setLoading] = useState(false); // novo
 
-  const [editId, setEditId] = useState(null);
-  const [editName, setEditName] = useState('');
-  const [editDescription, setEditDescription] = useState('');
-  const [editPrice, setEditPrice] = useState('');
+  // Buscar tudo.
+  const fetchItems = async () => {
+    setLoading(true);
+    try {
+      // executa o que precisa, se der erro entra no catch.
+      const response = await fetch(`${BASE_URL}/api/catalog`);
+      const data = await response.json();
+      console.log(JSON.stringify(data.catalog)); // debug
+      setCatalog(data);
+
+    } catch (error) {
+      // quando ocorre algum erro.
+      console.error('Error fetching items:', error);
+    }
+    finally {
+      setLoading(false);
+    }
+  }
 
   useEffect(() => {
-    fetchProducts();
-  }, []);
+    fetchItems();
+  }, [])
 
-  // GET
-  const fetchProducts = async () => {
-    try {
-      const res = await fetch(API_URL);
-      const data = await res.json();
-      setProducts(data.catalog);
-    } catch (err) {
-      console.error('Erro ao buscar produtos:', err);
-    }
-  };
 
   // CREATE
-  const createProduct = async () => {
-    if (!name || !description || !price) return;
-
-    const newProduct = {
-      name,
-      description,
-      price: parseFloat(price),
-      enabled: true,
-      featured: false
-    };
-
-    try {
-      await fetch(API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newProduct)
-      });
-
-      setName('');
-      setDescription('');
-      setPrice('');
-      fetchProducts();
-    } catch (err) {
-      console.error('Erro ao criar produto:', err);
+  const addItem = async () => {
+    if (Object.keys(newProduct).length === 3) {
+      return;
     }
-  };
+    try {
+      const response = await fetch(`${BASE_URL}/api/catalog`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({...newProduct}),
+      });
+      if (response.ok) {
+        await fetchItems();
+        setNewProduct({}); 
+        setText('');
+      }
+      else {
+        console.error('Failed to add item:', response.status);
+      }
+    } 
+    catch (error) {
+      console.error('Error adding item:', error);
+    }
+
+  }
 
   // UPDATE
-  const updateProduct = async (id) => {
+  const updateItem = async (id) => {
     try {
-      await fetch(`${API_URL}/${id}`, {
+      const response = await fetch(`${BASE_URL}/api/catalog/${id}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({
-          name: editName,
-          description: editDescription,
-          price: parseFloat(editPrice)
-        })
+          name: editProduct.name,
+          description: editProduct.description,
+          price: editProduct.price,
+        }),
       });
-
-      setEditId(null);
-      setEditName('');
-      setEditDescription('');
-      setEditPrice('');
-      fetchProducts();
-    } catch (err) {
-      console.error('Erro ao atualizar produto:', err);
+      if (response.ok) {
+        await fetchItems();
+        setEditProduct({}); 
+        // setEditItemId(null);
+        // setEditItemText('');
+      }
+      else {
+        console.error('Failed to update item:', response.status);
+      }
     }
-  };
+    catch (error) {
+      console.error('Error updating item:', error)
+    }
+
+  }
 
   // DELETE
-  const deleteProduct = (id) => {
-    Alert.alert("Confirmar exclusão", "Deseja realmente excluir?", [
-      { text: "Cancelar", style: "cancel" },
-      {
-        text: "Excluir",
-        style: "destructive",
-        onPress: async () => {
-          try {
-            await fetch(`${API_URL}/${id}`, {
-              method: 'DELETE'
-            });
-            fetchProducts();
-          } catch (err) {
-            console.error('Erro ao excluir produto:', err);
-          }
+  const deleteItem = async (id) => {
+    Alert.alert(
+      'Confirm Delete',
+      'Deseja realmente excluir: $(item.name) ?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Delete',
+          onPress: async () => {
+            try {
+              const response = await fetch(`${BASE_URL}/api/catalog${id}`, {
+                method: 'DELETE'
+              });
+              if (response.ok) {
+                await fetchItems();
+              }
+              else {
+                console.error('Failed to delete item:', response.status);
+              }
+            }
+            catch (error) {
+              console.error('Error deleting item:', error);
+            }
+          }, 
         }
-      }
-    ]);
+      ],
+      { cancelable: true }
+    );
   };
 
-  const renderItem = ({ item }) => {
-    if (item.id !== editId) {
+   //Update state editProduct
+   const updateEditProduct = (field, value) => { 
+    setEditProduct ((prev) => ({...prev,
+    [field]: value
+    }))
+
+    //Update state newProduct
+    const updateNewProduct = (field, value) => {
+      setNewProduct((prev) => ({...prev,
+        [field]: value
+      }));
+    }
+    }
+   
+  //   setEditProduct((prev) => ({
+  }
+
+  // READ -> um único item e/ou lista de itens
+  const renderItem = ({item}) => {
+    if (item.id != editProduct.id) {
       return (
         <View style={styles.item}>
-          <Text style={styles.itemTitle}>{item.name} - R$ {item.price.toFixed(2)}</Text>
-          <Text style={styles.itemDesc}>{item.description}</Text>
-          <Image
-            source={{ uri: item.image}}
-            style={styles.image}
+          <Image 
+            source={{uri: item.image}}
+            style={{width: 100, height: 100}}
           />
-
+          <Text style={styles.itemText}>{item.name}</Text>
+          <Text style={styles.itemText}>{item.description}</Text>
+          <Text style={styles.itemText}>{item.price}</Text>
+          
           <View style={styles.buttons}>
-            <Button title="Editar" onPress={() => {
-              setEditId(item.id);
-              setEditName(item.name);
-              setEditDescription(item.description);
-              setEditPrice(String(item.price));
-            }} />
-            <Button title="Excluir" color="red" onPress={() => deleteProduct(item.id)} />
+            <Button title='Edit' onPress={() => {setEditProduct(item)}}></Button>
+            <Button title='Delete' onPress={() => {deleteItem(item.id)}}></Button>
           </View>
         </View>
       );
+
     } else {
+      // Um item esta sendo editado
       return (
         <View style={styles.item}>
-          <TextInput
-            style={styles.input}
-            value={editName}
-            onChangeText={setEditName}
-            placeholder="Novo nome"
+          <TextInput 
+            style={styles.editInput}
+            onChangeText={(text) => updateEditProduct({'name': text})}
+            value={editProduct.name}
+            autoFocus
           />
-          <TextInput
-            style={styles.input}
-            value={editDescription}
-            onChangeText={setEditDescription}
-            placeholder="Nova descrição"
+          <TextInput 
+            style={styles.editInput}
+            onChangeText={(text) => updateEditProduct({'description': text})}
+            value={editProduct.description}
           />
-          <TextInput
-            style={styles.input}
-            value={editPrice}
-            onChangeText={setEditPrice}
-            keyboardType="decimal-pad"
-            placeholder="Novo preço"
+          <TextInput 
+            style={styles.editInput}
+            onChangeText={(text) => updateEditProduct({'price': parseFloat(text)})}
+            value={editProduct.price?.toString()}
+            keyboardType='numeric'
           />
-          <Button title="Salvar" onPress={() => updateProduct(item.id)} />
+          <Button title='Update' onPress={() => updateItem(item.id)}></Button>
         </View>
       );
     }
-  };
+  }
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Catálogo de Produtos</Text>
-
-      <TextInput
+      <TextInput 
         style={styles.input}
-        value={name}
-        onChangeText={setName}
-        placeholder="Nome"
+        value={newProduct.name}
+        onChangeText={(text) => updateNewProduct({'name': text})}
+        placeholder='Enter name item'
       />
-      <TextInput
+       <TextInput 
         style={styles.input}
-        value={description}
-        onChangeText={setDescription}
-        placeholder="Descrição"
+        value={newProduct.description}
+        onChangeText={(text) => updateNewProduct({'description': text})}
+        placeholder='Enter description item'
       />
-      <TextInput
+       <TextInput 
         style={styles.input}
-        value={price}
-        onChangeText={setPrice}
-        keyboardType="decimal-pad"
-        placeholder="Preço"
+        value={newProduct.price?.toString()}
+        onChangeText={(text) => updateNewProduct({'price': parseFloat(text)})}
+        placeholder='Enter price item'
+        keyboardType='numeric'
       />
-      <Button title="Adicionar Produto" onPress={createProduct} />
-
+      <Button 
+        title='Incluir Produto'
+        onPress={addItem}
+      />
       <FlatList
-        data={products}
+        data={catalog}
         renderItem={renderItem}
-        keyExtractor={item => item.id.toString()}
+        keyExtractor={item => item.id}
         style={styles.list}
       />
+      <Image 
+        source={{uri: "https://picsum.photos/200"}}
+        style={{width: 200, height: 200}}
+      />
 
-      <StatusBar style="auto" />
     </View>
   );
-}
+
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 24,
-    paddingTop: 48,
-    backgroundColor: '#f3e8ff', // lilás claro
+    padding: 20,
+    marginTop: 60,
   },
-  title: {
-    fontSize: 28,
-    fontFamily: 'Poppins-Bold',
-    textAlign: 'center',
-    color: '#7c3aed', // roxo vibrante
-    marginBottom: 24,
-    letterSpacing: 1,
+  text: {
+    fontSize: 24,
+  },
+  buttonContainer: {
+    flexDirection: 'row',
   },
   input: {
-    backgroundColor: '#ede9fe', // lilás bem claro
-    borderColor: '#a78bfa', // lilás médio
-    borderWidth: 2,
-    borderRadius: 12,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    fontSize: 16,
-    fontFamily: 'Poppins-Regular',
-    color: '#6d28d9', // roxo escuro
-    marginBottom: 14,
+    height: 40,
+    borderColor: 'gray',
+    borderWidth: 1,
+    marginBottom: 10,
+    paddingHorizontal: 10,
   },
   list: {
-    marginTop: 22,
+    marginTop: 20,
   },
   item: {
-    backgroundColor: '#c4b5fd', // lilás médio
-    borderRadius: 14,
-    padding: 18,
-    marginBottom: 16,
-    borderColor: '#a78bfa', // lilás médio
-    borderWidth: 2,
-    shadowColor: '#7c3aed',
-    shadowOpacity: 0.12,
-    shadowOffset: { width: 0, height: 4 },
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  itemTitle: {
-    fontSize: 20,
-    fontFamily: 'Poppins-SemiBold',
-    color: '#6d28d9', // roxo escuro
-    marginBottom: 6,
-  },
-  itemDesc: {
-    fontSize: 15,
-    fontFamily: 'Poppins-Regular',
-    color: '#7c3aed',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     marginBottom: 10,
+    padding: 10,
+    backgroundColor: '#f0f0f0',
+    borderRadius: 5,
   },
-  image: {
-    width: '100%',
-    height: 140,
-    borderRadius: 10,
-    marginBottom: 10,
-    backgroundColor: '#ede9fe',
+  itemText: {
+    flex: 1,
+    marginRight: 10,
   },
   buttons: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 8,
   },
+  editInput: {
+    flex: 1,
+    marginRight: 10,
+    borderColor: 'gray',
+    borderWidth: 1,
+    paddingHorizontal: 10,
+  }
 });
