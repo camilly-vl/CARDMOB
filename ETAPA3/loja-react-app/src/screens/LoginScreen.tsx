@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet } from 'react-native';
+import { View, Text, TextInput, Button, StyleSheet, SafeAreaView } from 'react-native';
 
 import { fakeLogin } from "../services/authService"
 import { useAuth } from "../contexts/AuthContext"
@@ -22,7 +22,8 @@ export default function LoginScreen({ navigation }: any) {
     };
 
     return (
-        <View style={styles.container}>
+        <SafeAreaView style={styles.container}>
+        <View>
             <Text>Email:</Text>
             <TextInput
                 style={styles.input}
@@ -47,6 +48,7 @@ export default function LoginScreen({ navigation }: any) {
                 onPress={() => navigation.navigate('Register')}
             />
         </View>
+    </SafeAreaView>
     );
 }
 
