@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, SafeAreaView } from 'react-native';
 
-import { fakeLogin } from "../services/authService"
+import { requestLogin } from "../services/authService"
 import { useAuth } from "../contexts/AuthContext"
 
 export default function LoginScreen({ navigation }: any) {
@@ -13,7 +13,7 @@ export default function LoginScreen({ navigation }: any) {
     const handleLogin = async () => {
         try {
             // Lógica de login / conexão com o backend
-            const token = await fakeLogin(email, password)
+            const token = await requestLogin(email, password)
             login(token);
             console.log('Login ok');
         } catch (err: any) {
@@ -23,32 +23,32 @@ export default function LoginScreen({ navigation }: any) {
 
     return (
         <SafeAreaView style={styles.container}>
-        <View>
-            <Text>Email:</Text>
-            <TextInput
-                style={styles.input}
-                placeholder="Email"
-                value={email}
-                onChangeText={setEmail}
-                autoCapitalize="none"
-            />
-            <Text>Senha:</Text>
-            <TextInput
-                style={styles.input}
-                placeholder="Senha"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry
-            />
-            {/* <Button title="Entrar" onPress={handleLogin} /> */}
-            {error ? <Text style={{ color: 'red' }}>{error}</Text> : null}
-            <Button title="Entrar" onPress={handleLogin} />
-            <Button
-                title="Registrar"
-                onPress={() => navigation.navigate('Register')}
-            />
-        </View>
-    </SafeAreaView>
+            <View>
+                <Text>Email:</Text>
+                <TextInput
+                    style={styles.input}
+                    placeholder="Email"
+                    value={email}
+                    onChangeText={setEmail}
+                    autoCapitalize="none"
+                />
+                <Text>Senha:</Text>
+                <TextInput
+                    style={styles.input}
+                    placeholder="Senha"
+                    value={password}
+                    onChangeText={setPassword}
+                    secureTextEntry
+                />
+                {/* <Button title="Entrar" onPress={handleLogin} /> */}
+                {error ? <Text style={{ color: 'red' }}>{error}</Text> : null}
+                <Button title="Entrar" onPress={handleLogin} />
+                <Button
+                    title="Registrar"
+                    onPress={() => navigation.navigate('Register')}
+                />
+            </View>
+        </SafeAreaView>
     );
 }
 
