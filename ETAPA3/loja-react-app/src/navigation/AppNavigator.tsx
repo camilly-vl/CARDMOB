@@ -4,6 +4,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { RootStackParamList, TabParamList } from './types';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
+import CatalogScreen from "../screens/catalog/CatalogScreen";
 
 // Telas do app - área não logada
 import HomeScreen from '../screens/HomeScreen';
@@ -20,16 +21,20 @@ function TabNavigator() {
         screenOptions={({ route, navigation}) => ({
             tabBarIcon: ({ color, focused, size }) => {
                 let iconName;
-            if (route.name === 'Home') {
-                iconName = focused ? 'home' : 'home';
-            }
+                if (route.name === "Catalog") {
+                    iconName = focused ? "tags" : "tags";
+                  }
             return <FontAwesome name={iconName} size={size} color={color} />;
             },
             tabBarActiveTintColor: 'red',
             tabBarInactiveTintColor: 'gray',
             headerShown: false,
             })}>
-        <Tab.Screen name="Home" component={HomeScreen} />
+        <Tab.Screen 
+              name="Catalog"
+              component={CatalogScreen}
+              options={{title: 'Menu'}}
+              />
         <Tab.Screen name="Settings" component={HomeScreen} />
         <Tab.Screen name="Register" component={RegisterScreen} />
     </Tab.Navigator>
